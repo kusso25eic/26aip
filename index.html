@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>M5Stack 温度計</title>
+</head>
+<body>
+    <button id="connectBtn">M5Stackに接続</button>
+    
+    <p>温度: <span id="temp">--</span> ℃</p>
+    <p>湿度: <span id="hum">--</span> %</p>
+    <p>気圧: <span id="press">--</span> hPa</p>
+
+    <script>
+        // M5Stack側と一致させるための合言葉（UUID）
+        const SERVICE_UUID = '25264DCE-A813-1620-A146-8098E419033B';
+        const SENSOR_CHAR_UUID = '5CDA93EB-A611-C588-812D-6E5677223AC8';
+
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                // 1. デバイスを探して接続する
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'M5_EnvKey' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                const characteristic = await service.getCharacteristic(SENSOR_CHAR_UUID);
+
+                // 2. データの自動受信（Notify）をスタート
+                await characteristic.startNotifications();
+                
+                // 3. M5Stackからデータが送られてくるたびに実行される処理
+                characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                    // バイトデータを文字に変換し、JSONとして読み込む
+                    const jsonString = new TextDecoder().decode(event.target.value);
+                    const data = JSON.parse(jsonString);
+                    
+                    // 画面の数値を書き換える
+                    document.getElementById('temp').textContent = data.t;
+                    document.getElementById('hum').textContent = data.h;
+                    document.getElementById('press').textContent = data.p;
+                });
+                
+                alert("接続に成功しました！");
+                
+            } catch (error) {
+                alert("エラーが発生しました: " + error);
+            }
+        });
+    </script>
+</body>
+</html>
