@@ -110,7 +110,7 @@
         // グラフに新しいデータを追加して再描画する関数
         function updateChart(temp, hum) {
             const now = new Date();
-            const timeLabel = now.toTimeString().split(' ')[0]; // "HH:MM:SS" 形式
+            const timeLabel = now.toTimeString().split(' ')[0];
 
             envChart.data.labels.push(timeLabel);
             envChart.data.datasets[0].data.push(temp);
@@ -123,7 +123,27 @@
                 envChart.data.datasets[1].data.shift();
             }
 
+            adjustScaleRange('y', envChart.data.datasets[0].data, 10);
+            adjustScaleRange('y1', envChart.data.datasets[1].data, 10);
+
             envChart.update();
+        }
+
+        function adjustScaleRange(axisId, dataArray, minSpan) {
+            const minVal = Math.min(...dataArray);
+            const maxVal = Math.max(...dataArray);
+            const currentSpan = maxVal - minVal;
+
+            if (currentSpan < minSpan) {
+                // データの中心値を求め、上下に半分ずつ広げる
+                const center = (maxVal + minVal) / 2;
+                envChart.options.scales[axisId].min = Math.floor(center - minSpan / 2);
+                envChart.options.scales[axisId].max = Math.ceil(center + minSpan / 2);
+            } else {
+                // データの変動幅がminSpanを超えた場合は自動調整に戻す
+                delete envChart.options.scales[axisId].min;
+                delete envChart.options.scales[axisId].max;
+            }
         }
 
         function setStatus(ledClass, text) {
