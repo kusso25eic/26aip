@@ -5,23 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M5Stack 温度計</title>
     <style>
-        /* ステータス表示用の最低限のスタイル */
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            margin-left: 8px;
+        .status-wrap {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            color: #000;
         }
-        .disconnected { background-color: #e0e0e0; color: #333; }
-        .connected    { background-color: #d4edda; color: #155724; }
-        .error        { background-color: #f8d7da; color: #721c24; }
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .led-off   { background-color: #bbb; }
+        .led-green { background-color: #00c853; }
+        .led-red   { background-color: #d50000; }
     </style>
 </head>
 <body>
     <div>
         <button id="connectBtn">M5Stackに接続</button>
-        <span id="status" class="status-badge disconnected">未接続</span>
+        <span class="status-wrap">
+            <span id="led" class="led led-off"></span>
+            <span id="statusText">切断</span>
+        </span>
     </div>
     
     <p>温度: <span id="temp">--</span> ℃</p>
@@ -29,22 +36,22 @@
     <p>気圧: <span id="press">--</span> hPa</p>
 
     <script>
+
         const SERVICE_UUID = '25264dce-a813-1620-a146-8098e419033b';
         const SENSOR_CHAR_UUID = '5cda93eb-a611-c588-812d-6e5677223ac8';
 
         const connectBtn = document.getElementById('connectBtn');
-        const statusEl = document.getElementById('status');
-        let bluetoothDevice = null; // 接続中のデバイスを保持する変数
+        const ledEl = document.getElementById('led');
+        const statusTextEl = document.getElementById('statusText');
+        let bluetoothDevice = null;
 
-        // 画面のステータス表示を更新する関数
-        function updateStatus(text, className) {
-            statusEl.textContent = text;
-            statusEl.className = 'status-badge ' + className;
+        function setStatus(ledClass, text) {
+            ledEl.className = 'led ' + ledClass;
+            statusTextEl.textContent = text;
         }
 
-        // 切断されたときの共通処理
         function onDisconnected() {
-            updateStatus('未接続（切断されました）', 'disconnected');
+            setStatus('led-off', '切断');
             connectBtn.textContent = 'M5Stackに接続';
             document.getElementById('temp').textContent = '--';
             document.getElementById('hum').textContent = '--';
@@ -53,24 +60,19 @@
         }
 
         connectBtn.addEventListener('click', async () => {
-            // すでに接続中の場合は「切断」を実行する
             if (bluetoothDevice && bluetoothDevice.gatt.connected) {
                 bluetoothDevice.gatt.disconnect();
                 return;
             }
 
             try {
-                updateStatus('検索中...', 'disconnected');
-                
                 bluetoothDevice = await navigator.bluetooth.requestDevice({
                     filters: [{ name: 'M5_EnvKey' }],
                     optionalServices: [SERVICE_UUID]
                 });
 
-                // 切断イベントの監視を登録
                 bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
 
-                updateStatus('接続処理中...', 'disconnected');
                 const server = await bluetoothDevice.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 const characteristic = await service.getCharacteristic(SENSOR_CHAR_UUID);
@@ -86,13 +88,12 @@
                     document.getElementById('press').textContent = data.p;
                 });
                 
-                // 接続完了時のUI更新（alertは使わない）
-                updateStatus('接続中', 'connected');
+                setStatus('led-green', '接続中');
                 connectBtn.textContent = '切断する';
                 
             } catch (error) {
                 console.error(error);
-                updateStatus('接続エラー / キャンセル', 'error');
+                setStatus('led-red', '切断');
                 bluetoothDevice = null;
             }
         });
