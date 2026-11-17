@@ -32,10 +32,10 @@
 </head>
 <body>
     <div>
-        <button id="connectBtn">接続する</button>
+        <button id="connectBtn">Connect</button>
         <span class="status-wrap">
             <span id="led" class="led led-off"></span>
-            <span id="statusText">切断</span>
+            <span id="statusText">Disconnected</span>
         </span>
     </div>
     
@@ -129,8 +129,8 @@
         }
 
         function onDisconnected() {
-            setStatus('led-off', '切断');
-            connectBtn.textContent = '接続する';
+            setStatus('led-off', 'Disconnected');
+            connectBtn.textContent = 'Connect';
             document.getElementById('temp').textContent = '---';
             document.getElementById('hum').textContent = '---';
             document.getElementById('press').textContent = '---';
@@ -168,12 +168,12 @@
                     updateChart(data.t, data.h);
                 });
                 
-                setStatus('led-green', '接続中');
-                connectBtn.textContent = '切断する';
+                setStatus('led-green', 'Connected');
+                connectBtn.textContent = 'Disconnect';
                 
             } catch (error) {
                 console.error(error);
-                setStatus('led-red', '切断');
+                setStatus('led-red', 'Error');
                 bluetoothDevice = null;
             }
         });
