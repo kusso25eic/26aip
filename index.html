@@ -57,7 +57,10 @@
         const statusTextEl = document.getElementById('statusText');
         let bluetoothDevice = null;
 
-        const MAX_DATA_POINTS = 30; // グラフに表示する最大データ数
+        const MAX_DATA_POINTS = 30;
+        const GRAPH_INTERVAL_MS = 10000;
+        let lastChartUpdate = 0;
+
         const ctx = document.getElementById('envChart').getContext('2d');
         const envChart = new Chart(ctx, {
             type: 'line',
@@ -165,7 +168,11 @@
                     document.getElementById('hum').textContent = data.h;
                     document.getElementById('press').textContent = data.p;
 
-                    updateChart(data.t, data.h);
+                    const now = Date.now();
+                    if (now - lastChartUpdate >= GRAPH_INTERVAL_MS) {
+                        updateChart(data.t, data.h);
+                        lastChartUpdate = now;
+                    }
                 });
                 
                 setStatus('led-green', 'Connected');
