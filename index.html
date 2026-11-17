@@ -24,16 +24,16 @@
 </head>
 <body>
     <div>
-        <button id="connectBtn">M5Stackに接続</button>
+        <button id="connectBtn">接続する</button>
         <span class="status-wrap">
             <span id="led" class="led led-off"></span>
             <span id="statusText">切断</span>
         </span>
     </div>
     
-    <p>温度: <span id="temp">--</span> ℃</p>
-    <p>湿度: <span id="hum">--</span> %</p>
-    <p>気圧: <span id="press">--</span> hPa</p>
+    <p>温度: <span id="temp">---</span> ℃</p>
+    <p>湿度: <span id="hum">---</span> %</p>
+    <p>気圧: <span id="press">---</span> hPa</p>
 
     <script>
 
@@ -52,10 +52,10 @@
 
         function onDisconnected() {
             setStatus('led-off', '切断');
-            connectBtn.textContent = 'M5Stackに接続';
-            document.getElementById('temp').textContent = '--';
-            document.getElementById('hum').textContent = '--';
-            document.getElementById('press').textContent = '--';
+            connectBtn.textContent = '接続する';
+            document.getElementById('temp').textContent = '---';
+            document.getElementById('hum').textContent = '---';
+            document.getElementById('press').textContent = '---';
             bluetoothDevice = null;
         }
 
