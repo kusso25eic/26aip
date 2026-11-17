@@ -164,6 +164,8 @@
                     document.getElementById('temp').textContent = data.t;
                     document.getElementById('hum').textContent = data.h;
                     document.getElementById('press').textContent = data.p;
+
+                    updateChart(data.t, data.h);
                 });
                 
                 setStatus('led-green', '接続中');
