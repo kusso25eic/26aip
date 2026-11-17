@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>M5Stack 温度計</title>
+    <title>温度計</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <button id="connectBtn">M5Stackに接続</button>
@@ -12,13 +13,13 @@
     <p>気圧: <span id="press">--</span> hPa</p>
 
     <script>
-        // M5Stack側と一致させるための合言葉（UUID）
+        // UUID
         const SERVICE_UUID = '25264dce-a813-1620-a146-8098e419033b';
         const SENSOR_CHAR_UUID = '5cda93eb-a611-c588-812d-6e5677223ac8';
 
         document.getElementById('connectBtn').addEventListener('click', async () => {
             try {
-                // 1. デバイスを探して接続する
+                // デバイスを探して接続する
                 const device = await navigator.bluetooth.requestDevice({
                     filters: [{ name: 'M5_EnvKey' }],
                     optionalServices: [SERVICE_UUID]
@@ -27,10 +28,10 @@
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 const characteristic = await service.getCharacteristic(SENSOR_CHAR_UUID);
 
-                // 2. データの自動受信（Notify）をスタート
+                // データの自動受信（Notify）をスタート
                 await characteristic.startNotifications();
                 
-                // 3. M5Stackからデータが送られてくるたびに実行される処理
+                // M5Stackからデータが送られてくるたびに実行される処理
                 characteristic.addEventListener('characteristicvaluechanged', (event) => {
                     // バイトデータを文字に変換し、JSONとして読み込む
                     const jsonString = new TextDecoder().decode(event.target.value);
