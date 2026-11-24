@@ -3,137 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M5Stack 環境モニタ</title>
+    <title>M5Stack 温度計</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", sans-serif;
-            background-color: #f4f4f2;
-            color: #1a1a1a;
-            margin: 0;
-            padding: 16px;
-            max-width: 600px;
-        }
-
-        /* 上部コントロールバー */
-        .header-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 12px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #d4d4d0;
-        }
-
-        button {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:active {
-            background-color: #444;
-        }
-
         .status-wrap {
             display: inline-flex;
             align-items: center;
-            font-size: 14px;
-            font-weight: bold;
+            margin-left: 10px;
+            color: #000;
         }
-
         .led {
             width: 10px;
             height: 10px;
             border-radius: 50%;
             margin-right: 6px;
         }
-        .led-off   { background-color: #a0a09c; }
-        .led-green { background-color: #00a846; }
-        .led-red   { background-color: #d00000; }
+        .led-off   { background-color: #bbb; }
+        .led-green { background-color: #00c853; }
+        .led-red   { background-color: #d50000; }
 
-        /* 数値表示グリッド */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        /* スマホ縦画面で幅が狭い場合は縦積みにする */
-        @media (max-width: 480px) {
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .metric-box {
-            background-color: #ffffff;
-            border: 1px solid #dcdcd8;
-            border-left-width: 5px; /* 左側のアクセントカラー */
-            padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        /* 項目ごとのアクセントカラーとごく薄い背景色 */
-        .metric-temp {
-            border-left-color: #c62828;
-            background-color: #fdfafa;
-        }
-        .metric-hum {
-            border-left-color: #1565c0;
-            background-color: #fafcfd;
-        }
-        .metric-press {
-            border-left-color: #2e7d32;
-            background-color: #fafcfa;
-        }
-
-        .metric-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #555552;
-            letter-spacing: 0.05em;
-            margin-bottom: 4px;
-        }
-
-        .metric-value-row {
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-        }
-
-        .metric-value {
-            font-size: 36px;
-            font-weight: 700;
-            line-height: 1.1;
-            font-variant-numeric: tabular-nums; /* 数字の横幅を揃えてガタつき防止 */
-            color: #111111;
-        }
-
-        .metric-unit {
+        .settings {
+            margin-top: 15px;
             font-size: 14px;
-            font-weight: bold;
-            color: #555552;
+        }
+        .settings label {
+            margin-right: 12px;
+        }
+        .settings input {
+            width: 55px;
         }
 
-        /* グラフ枠 */
         .chart-container {
-            background-color: #ffffff;
-            border: 1px solid #dcdcd8;
-            padding: 12px;
-            height: 250px;
+            width: 100%;
+            max-width: 600px;
+            height: 260px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="header-bar">
+    <div>
         <button id="connectBtn">M5Stackに接続</button>
         <span class="status-wrap">
             <span id="led" class="led led-off"></span>
@@ -141,30 +50,14 @@
         </span>
     </div>
     
-    <div class="metrics-grid">
-        <div class="metric-box metric-temp">
-            <span class="metric-label">温度 / TEMP</span>
-            <div class="metric-value-row">
-                <span id="temp" class="metric-value">--</span>
-                <span class="metric-unit">℃</span>
-            </div>
-        </div>
+    <p>温度: <span id="temp">--</span> ℃</p>
+    <p>湿度: <span id="hum">--</span> %</p>
+    <p>気圧: <span id="press">--</span> hPa</p>
 
-        <div class="metric-box metric-hum">
-            <span class="metric-label">湿度 / HUM</span>
-            <div class="metric-value-row">
-                <span id="hum" class="metric-value">--</span>
-                <span class="metric-unit">%</span>
-            </div>
-        </div>
-
-        <div class="metric-box metric-press">
-            <span class="metric-label">気圧 / PRESS</span>
-            <div class="metric-value-row">
-                <span id="press" class="metric-value">--</span>
-                <span class="metric-unit">hPa</span>
-            </div>
-        </div>
+    <!-- グラフ設定用の入力欄 -->
+    <div class="settings">
+        <label>更新間隔: <input type="number" id="intervalInput" value="5" min="1"> 秒</label>
+        <label>最大点数: <input type="number" id="maxPointsInput" value="30" min="2" max="500"> 点</label>
     </div>
 
     <div class="chart-container">
@@ -178,13 +71,24 @@
         const connectBtn = document.getElementById('connectBtn');
         const ledEl = document.getElementById('led');
         const statusTextEl = document.getElementById('statusText');
-        let bluetoothDevice = null;
+        const intervalInput = document.getElementById('intervalInput');
+        const maxPointsInput = document.getElementById('maxPointsInput');
 
-        // --- Chart.js 設定 ---
-        const MAX_DATA_POINTS = 30;
-        const GRAPH_INTERVAL_MS = 10000; // 10秒ごとにプロット
+        let bluetoothDevice = null;
         let lastChartUpdate = 0;
 
+        // 入力欄から現在の設定値を取得する関数（不正な値対策のデフォルト値付き）
+        function getGraphIntervalMs() {
+            const sec = parseInt(intervalInput.value, 10);
+            return (isNaN(sec) || sec < 1 ? 1 : sec) * 1000;
+        }
+
+        function getMaxDataPoints() {
+            const pts = parseInt(maxPointsInput.value, 10);
+            return isNaN(pts) || pts < 2 ? 2 : pts;
+        }
+
+        // --- Chart.js の初期設定 ---
         const ctx = document.getElementById('envChart').getContext('2d');
         const envChart = new Chart(ctx, {
             type: 'line',
@@ -194,21 +98,19 @@
                     {
                         label: '温度 (℃)',
                         data: [],
-                        borderColor: '#c62828',
-                        backgroundColor: 'rgba(198, 40, 40, 0.08)',
+                        borderColor: '#e53935',
+                        backgroundColor: 'rgba(229, 57, 53, 0.1)',
                         yAxisID: 'y',
-                        tension: 0.1,
-                        borderWidth: 2,
+                        tension: 0.2,
                         pointRadius: 2
                     },
                     {
                         label: '湿度 (%)',
                         data: [],
-                        borderColor: '#1565c0',
-                        backgroundColor: 'rgba(21, 101, 192, 0.08)',
+                        borderColor: '#1e88e5',
+                        backgroundColor: 'rgba(30, 136, 229, 0.1)',
                         yAxisID: 'y1',
-                        tension: 0.1,
-                        borderWidth: 2,
+                        tension: 0.2,
                         pointRadius: 2
                     }
                 ]
@@ -233,7 +135,9 @@
             }
         });
 
+        // 軸の最低表示幅を確保する補助関数
         function adjustScaleRange(axisId, dataArray, minSpan) {
+            if (dataArray.length === 0) return;
             const minVal = Math.min(...dataArray);
             const maxVal = Math.max(...dataArray);
             const currentSpan = maxVal - minVal;
@@ -248,6 +152,24 @@
             }
         }
 
+        // 最大点数を超えた古いデータを削除する関数
+        function trimChartData() {
+            const maxPoints = getMaxDataPoints();
+            while (envChart.data.labels.length > maxPoints) {
+                envChart.data.labels.shift();
+                envChart.data.datasets[0].data.shift();
+                envChart.data.datasets[1].data.shift();
+            }
+        }
+
+        // 最大点数の入力値が変更されたら即座にグラフへ反映
+        maxPointsInput.addEventListener('change', () => {
+            trimChartData();
+            adjustScaleRange('y', envChart.data.datasets[0].data, 10);
+            adjustScaleRange('y1', envChart.data.datasets[1].data, 20);
+            envChart.update();
+        });
+
         function updateChart(temp, hum) {
             const now = new Date();
             const timeLabel = now.toTimeString().split(' ')[0];
@@ -256,18 +178,14 @@
             envChart.data.datasets[0].data.push(temp);
             envChart.data.datasets[1].data.push(hum);
 
-            if (envChart.data.labels.length > MAX_DATA_POINTS) {
-                envChart.data.labels.shift();
-                envChart.data.datasets[0].data.shift();
-                envChart.data.datasets[1].data.shift();
-            }
+            trimChartData();
 
             adjustScaleRange('y', envChart.data.datasets[0].data, 10);
             adjustScaleRange('y1', envChart.data.datasets[1].data, 20);
 
             envChart.update();
         }
-        // --------------------
+        // ---------------------------
 
         function setStatus(ledClass, text) {
             ledEl.className = 'led ' + ledClass;
@@ -303,17 +221,19 @@
 
                 await characteristic.startNotifications();
                 
+                // 再接続時にすぐ1点目が描画されるようリセット
+                lastChartUpdate = 0;
+
                 characteristic.addEventListener('characteristicvaluechanged', (event) => {
                     const jsonString = new TextDecoder().decode(event.target.value);
                     const data = JSON.parse(jsonString);
                     
-                    // 小数点第1位までに揃えて表示（桁数変化によるガタつき防止）
-                    document.getElementById('temp').textContent = Number(data.t).toFixed(1);
-                    document.getElementById('hum').textContent = Number(data.h).toFixed(1);
-                    document.getElementById('press').textContent = Number(data.p).toFixed(1);
+                    document.getElementById('temp').textContent = data.t;
+                    document.getElementById('hum').textContent = data.h;
+                    document.getElementById('press').textContent = data.p;
 
                     const now = Date.now();
-                    if (now - lastChartUpdate >= GRAPH_INTERVAL_MS) {
+                    if (now - lastChartUpdate >= getGraphIntervalMs()) {
                         updateChart(data.t, data.h);
                         lastChartUpdate = now;
                     }
